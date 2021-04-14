@@ -4,7 +4,7 @@ from pygame.locals import *
 
 pg.init()
 
-W = 800
+W = 1000
 HW = W//2
 S = pg.display.set_mode((W, W))
 CLOCK = pg.time.Clock()
@@ -38,29 +38,35 @@ class Food:
     def add(self): food_list.append((random.randint(self.radius, W - self.radius), random.randint(self.radius, W - self.radius), self.color))
 
 
-my_circle_x, my_circle_y, my_radius = HW, HW, 10
+my_circle_x, my_circle_y, my_radius, my_speed = HW, HW, 10, 2
 
 food_radius = 2
 food_list = []
 for i in range(100):
-    new_food = Food(random.randint(food_radius, W-food_radius), random.randint(food_radius, W-food_radius), food_radius, color_generator())
-    new_food.add()
+    food = Food(random.randint(food_radius, W-food_radius), random.randint(food_radius, W-food_radius), food_radius, color_generator())
+    food.add()
 
 while True:
     S.fill(BLACK)
 
     mouse_x, mouse_y = pg.mouse.get_pos()
 
-    # i'd like to make this into a switch-case statement later!
-    if my_circle_x > mouse_x: my_circle_x -= 1
-    if my_circle_x < mouse_x: my_circle_x += 1
-    if my_circle_y > mouse_y: my_circle_y -= 1
-    if my_circle_y < mouse_y: my_circle_y += 1
+    if my_circle_x > mouse_x: my_circle_x -= my_speed
+    if my_circle_x < mouse_x: my_circle_x += my_speed
+    if my_circle_y > mouse_y: my_circle_y -= my_speed
+    if my_circle_y < mouse_y: my_circle_y += my_speed
 
     for food in food_list:
         food_x, food_y, food_color = food
         dist = math.hypot(food_x - my_circle_x, food_y - my_circle_y)
-        if dist <= my_radius + food_radius: food_list.pop(food_list.index(food))
+        if dist <= my_radius + food_radius:
+            food_list.pop(food_list.index(food))
+            my_radius += .3
+            if my_speed > 0.07:
+                my_speed -= 0.004
+            print(my_speed)
+            new_food = Food(random.randint(food_radius, W - food_radius), random.randint(food_radius, W - food_radius), food_radius, color_generator())
+            new_food.add()
         pg.draw.circle(S, food_color, (food_x, food_y), food_radius)
 
     pg.draw.circle(S, WHITE, (my_circle_x, my_circle_y), my_radius)
@@ -72,6 +78,11 @@ while True:
     pg.display.update()
     CLOCK.tick(100)
 
+# Todo 3:
+# when circle touches food increase its size & slightly decrease it's speed
+# when u eat a food, a new food will be created in a new random pos
+# rewrite into the switch-case statement
+# ** I'VE JUST FOUND OUT THAT THERE'S NO SWITCH-CASE IN PY! **
 
 # Todo 2:
 # create a Food class w/ a that creates a small circle "IS THIS NECESSARY?"...
