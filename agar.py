@@ -1,11 +1,12 @@
 import pygame as pg
-import sys, random, math
+import sys, math
+from random import randint
 from pygame.locals import *
 
 pg.init()
 
 W = 1000
-HW = W//2
+HW = W // 2
 S = pg.display.set_mode((W, W))
 CLOCK = pg.time.Clock()
 
@@ -13,20 +14,29 @@ BLACK = (50, 50, 50)
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
 GREEN = (100, 255, 100)
-def color_generator(): return [(random.randint(100, 255)) for _ in range(3)]
+color_generator = lambda: [(randint(100, 255)) for _ in range(3)]
+
 
 class Circles:
-    def __init__(self, x, y, radius, speed):
-        self.x = x
-        self.y = y
+    def __init__(self, radius, vel_x, vel_y, color):
+        self.x = randint(radius, W - radius)
+        self.y = randint(radius, W - radius)
         self.radius = radius
-        self.speed = speed
+        self.vel_x = vel_x
+        self.vel_y = vel_y
+        self.color = color
 
     def create(self):
-        pass
+        # ai_circle_list.append((self.x, self.y, self.radius, self.color))
+        pg.draw.circle(S, self.color, (self.x, self.y), self.radius)
 
-    def move(self):
-        pass
+    def move_ai(self):
+        if self.x + self.radius > W or self.x < 0: self.vel_x = -self.vel_x
+        if self.y + self.radius > W or self.y < 0: self.vel_y = -self.vel_y
+
+        self.x += self.vel_x
+        self.y += self.vel_y
+
 
 class Food:
     def __init__(self, x, y, radius, color):
@@ -35,20 +45,24 @@ class Food:
         self.radius = radius
         self.color = color
 
-    def add(self): food_list.append((random.randint(self.radius, W - self.radius), random.randint(self.radius, W - self.radius), self.color))
+    def add(self): food_list.append(
+        (randint(self.radius, W - self.radius), randint(self.radius, W - self.radius), self.color))
 
 
 my_circle_x, my_circle_y, my_radius, my_speed = HW, HW, 10, 2
 
+ai_circle_x, ai_circle_y, ai_radius, ai_vel_x, ai_vel_y = 100, 100, 10, 1, 1
+ai_circle_list = [Circles(ai_radius, ai_vel_x, ai_vel_y, color_generator()) for _ in range(5)]
+
 food_radius = 2
 food_list = []
-for i in range(100):
-    food = Food(random.randint(food_radius, W-food_radius), random.randint(food_radius, W-food_radius), food_radius, color_generator())
+for _ in range(70):
+    food = Food(randint(food_radius, W - food_radius), randint(food_radius, W - food_radius), food_radius,
+                color_generator())
     food.add()
 
 while True:
     S.fill(BLACK)
-
     mouse_x, mouse_y = pg.mouse.get_pos()
 
     if my_circle_x > mouse_x: my_circle_x -= my_speed
@@ -58,16 +72,33 @@ while True:
 
     for food in food_list:
         food_x, food_y, food_color = food
-        dist = math.hypot(food_x - my_circle_x, food_y - my_circle_y)
-        if dist <= my_radius + food_radius:
+        # CALC DIST FOR PLAYER
+        dist_player = math.hypot(food_x - my_circle_x, food_y - my_circle_y)
+        if dist_player <= my_radius + food_radius and food in food_list:
             food_list.pop(food_list.index(food))
             my_radius += .3
-            if my_speed > 0.07:
-                my_speed -= 0.004
-            print(my_speed)
-            new_food = Food(random.randint(food_radius, W - food_radius), random.randint(food_radius, W - food_radius), food_radius, color_generator())
+            if my_speed > 0.07: my_speed -= 0.004
+            new_food = Food(randint(food_radius, W - food_radius), randint(food_radius, W - food_radius), food_radius,
+                            color_generator())
             new_food.add()
+
+        # CALC DIST FOR AI
+        for ai_circle in ai_circle_list:
+            dist_ai = math.hypot(food_x - ai_circle.x, food_y - ai_circle.y)
+            if dist_ai <= ai_circle.radius + food_radius and food in food_list:
+                food_list.pop(food_list.index(food))
+                ai_circle.radius += 2.5
+                if ai_circle.vel_x > 0.07: ai_circle.vel_x -= 0.005
+                if ai_circle.vel_y > 0.07: ai_circle.vel_y -= 0.005
+                new_food = Food(randint(food_radius, W - food_radius), randint(food_radius, W - food_radius),
+                                food_radius, color_generator())
+                new_food.add()
+
         pg.draw.circle(S, food_color, (food_x, food_y), food_radius)
+
+    for ai_circle in ai_circle_list:
+        ai_circle.create()
+        ai_circle.move_ai()
 
     pg.draw.circle(S, WHITE, (my_circle_x, my_circle_y), my_radius)
 
@@ -77,6 +108,16 @@ while True:
             sys.exit()
     pg.display.update()
     CLOCK.tick(100)
+
+# Todo 4: create the other AI circles
+# in the Circles 'create' method,
+# make pg spawn a circle in a random pos w/ its attributes (just one ai circle for now)
+# add the ai circle into a list
+# make the ai circles move, they'll move straight but bounces back at the screen borders
+# calc the dist between an ai circle & a food... WHERE SHOULD I PUT THE CODE?
+#   - i think we're gonna use a nested for loop for this, cz each list has a diff # of things...
+#   - and for each of those things we calc the dist between ALL of the other things
+# when an ai circle touches a food it disappears then circle grows & speed decreases slightly
 
 # Todo 3:
 # when circle touches food increase its size & slightly decrease it's speed

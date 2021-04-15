@@ -39,9 +39,9 @@ while True:
 
 
 # Todo 2:
-# to get the dist of the circles from each other, use 'math.hypot(x1 - x2, y1 - y2)'
-# test the collision by adding the circles' radiuses & comparing it w/ the dist...
-#   - if dist <= radius1 + radius2 ,then a collision has occurred
+# to get the dist_player of the circles from each other, use 'math.hypot(x1 - x2, y1 - y2)'
+# test the collision by adding the circles' radiuses & comparing it w/ the dist_player...
+#   - if dist_player <= radius1 + radius2 ,then a collision has occurred
 # finally, draw the circles into the display
 
 # Todo 1:
